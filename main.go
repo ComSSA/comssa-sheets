@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2/google"
@@ -52,6 +53,7 @@ func main() {
 			sendAlert(fmt.Sprintf("Error getting user data for user %d", userID), err)
 		}
 		users = append(users, data)
+		time.Sleep(200 * time.Millisecond)
 	}
 
 	log.Printf("Number of users: %d", len(users))
@@ -112,7 +114,7 @@ func getUsers(url string, token string) ([]int, error) {
 	page := 1
 
 	for {
-		req, err := http.NewRequest("GET", url+"/api/v1/users", nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/users?page=%d", url, page), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -152,6 +154,7 @@ func getUsers(url string, token string) ([]int, error) {
 			break
 		}
 		page++
+		time.Sleep(200 * time.Millisecond)
 	}
 
 	return allUserIDs, nil
