@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load("penis.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -128,6 +128,8 @@ func getUsers(url string, token string) ([]int, error) {
 		}
 		defer resp.Body.Close()
 
+		fmt.Print("Made request!")
+
 		buf := new(bytes.Buffer)
 		_, err = buf.ReadFrom(resp.Body)
 		if err != nil {
@@ -135,11 +137,17 @@ func getUsers(url string, token string) ([]int, error) {
 		}
 		body := buf.String()
 
+		fmt.Printf("Response body (first 500 chars):\n%.500s\n", body)
+
+		fmt.Print("Read from buffer!\n")
+
 		var result map[string]interface{}
 		err = json.Unmarshal([]byte(body), &result)
 		if err != nil {
 			return nil, err
 		}
+
+		fmt.Print("Unmarshalled!\n")
 
 		users := result["data"].([]interface{})
 		for _, user := range users {
@@ -148,11 +156,22 @@ func getUsers(url string, token string) ([]int, error) {
 			allUserIDs = append(allUserIDs, userID)
 		}
 
+		fmt.Print("Read into users thing 1\n")
+		fmt.Print("Meta\n")
+		fmt.Printf("%.1000s\n", result["meta"])
+
 		meta := result["meta"].(map[string]interface{})
+
+		fmt.Print("Pagination\n")
+		fmt.Printf("%.1000s\n", meta["pagination"])
+
 		pagination := meta["pagination"].(map[string]interface{})
 		if pagination["next"] == nil {
 			break
 		}
+
+		fmt.Print("Read into users thing 2\n")
+
 		page++
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -161,7 +180,7 @@ func getUsers(url string, token string) ([]int, error) {
 }
 
 func getUserData(url string, token string, userID int) ([]interface{}, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/users/%d", url, userID), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/users%d", url, userID), nil)
 	if err != nil {
 		return nil, err
 	}
