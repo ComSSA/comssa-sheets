@@ -1,6 +1,4 @@
 import os
-import time
-import json
 import requests
 import logging
 from dotenv import load_dotenv
@@ -19,13 +17,14 @@ DISCORD_ID_TO_PING = os.getenv("DISCORD_ID_TO_PING")
 
 
 # --- Send Discord alert and exit ---
-def send_alert(message, err):
+def send_alert(message, err, ping=True):
     if not DISCORD_WEBHOOK:
         logging.warning("DISCORD_WEBHOOK is not set")
         return
 
-    if DISCORD_ID_TO_PING:
-        message = f"<@{DISCORD_ID_TO_PING}> {message}"
+    if ping:
+        if DISCORD_ID_TO_PING:
+            message = f"<@{DISCORD_ID_TO_PING}> {message}"
 
     payload = {
         "content": f"{message}\n```{err}```"
@@ -66,7 +65,6 @@ def get_users(url, token):
             break
 
         page += 1
-        time.sleep(0.2)
 
     return all_user_ids
 
@@ -163,18 +161,18 @@ def main():
         try:
             data = get_user_data(CTFD_URL, CTFD_TOKEN, user_id)
             users.append(data)
-            time.sleep(0.2)
         except Exception as e:
             send_alert(f"Error getting user data for user {user_id}", e)
 
     logging.info(f"Number of users: {len(users)}")
 
-    write_range = "TESTING!A2:K"
+    write_range = "PRODUCTIOn!A2:K"
     try:
         update_sheet(service, SPREADSHEET_ID, write_range, users)
     except Exception as e:
         send_alert("Error updating sheet", e)
-
+    else:
+        send_alert("Successfully updated", "Swag", ping=False) 
 
 if __name__ == "__main__":
     main()
